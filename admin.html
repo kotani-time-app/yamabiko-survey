@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>本社 管理画面｜やまびこ畜産 京橋店</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1c1714; --panel:#2a221d; --panel2:#352b24; --line:#4a3c32;
+  --ink:#f6efe7; --mute:#b8a898; --ember:#ff7a2f; --ember2:#ffb067;
+  --gold:#ffd35c; --red:#e8584a; --green:#5fc48a; --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Zen Maru Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;
+  background-image:radial-gradient(circle at 50% -10%,#3b2a1f 0,transparent 60%);}
+button{font-family:inherit;cursor:pointer;border:none}
+.wrap{max-width:460px;margin:0 auto;padding:16px 16px 48px}
+.demobar{display:flex;gap:6px;background:#0f0c0a;border:1px dashed var(--line);border-radius:12px;padding:6px;margin-bottom:16px}
+.demobar button{flex:1;padding:8px;border-radius:8px;background:transparent;color:var(--mute);font-size:13px;font-weight:700}
+.demobar button.on{background:var(--panel2);color:var(--ink)}
+.demonote{font-size:11px;color:var(--mute);text-align:center;margin:-10px 0 14px}
+.screen{display:none;animation:fade .35s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hero{text-align:center;padding:18px 0 8px}
+.shop{font-size:13px;color:var(--ember2);letter-spacing:.15em;font-weight:700}
+.table{display:inline-block;margin-top:6px;font-size:12px;background:var(--panel2);padding:3px 10px;border-radius:99px;color:var(--mute)}
+h1{font-size:24px;font-weight:900;line-height:1.4;margin:12px 0 6px}
+h1 em{font-style:normal;color:var(--gold)}
+.lead{color:var(--mute);font-size:14px;line-height:1.7}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:14px}
+.qnum{font-size:11px;color:var(--ember2);font-weight:700;letter-spacing:.1em}
+.qtext{font-size:16px;font-weight:700;margin:4px 0 12px;line-height:1.5}
+.stars{display:flex;justify-content:center;gap:6px}
+.star{font-size:40px;background:none;color:#5a4a3e;transition:transform .15s,color .15s;line-height:1}
+.star.on{color:var(--gold);text-shadow:0 0 14px rgba(255,211,92,.45)}
+.star:active{transform:scale(1.2)}
+.starlabel{text-align:center;color:var(--mute);font-size:13px;margin-top:8px;min-height:18px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;padding:12px 14px;border-radius:12px;background:var(--panel2);color:var(--ink);font-size:15px;border:2px solid transparent;transition:.15s}
+.opt.on{border-color:var(--ember);background:#45301f}
+.btn{display:block;width:100%;padding:16px;border-radius:14px;font-size:17px;font-weight:900;margin-top:18px;
+  background:linear-gradient(180deg,var(--ember2),var(--ember));color:#2a1306;box-shadow:0 6px 0 #a8461a;transition:.1s}
+.btn:active{transform:translateY(3px);box-shadow:0 3px 0 #a8461a}
+.btn:disabled{background:#4a3c32;color:#8a7a6c;box-shadow:none;cursor:not-allowed}
+.btn.sub{background:var(--panel2);color:var(--ink);box-shadow:0 4px 0 #1a1411;font-size:15px}
+.err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:16px}
+.progress{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:14px}
+.progress i{display:block;height:100%;background:var(--ember);width:0;transition:width .3s}
+
+/* gacha */
+.machine{position:relative;width:260px;margin:10px auto 0}
+.machine svg{width:100%;display:block}
+#handle{transform-origin:130px 240px;transition:transform 2.7s cubic-bezier(.35,0,.25,1)}
+#handle.turn{transform:rotate(1080deg)}
+#balls{transform-origin:130px 110px}
+#balls.shake{animation:shake .45s ease 6}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-6deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+.capsule{position:absolute;left:50%;top:290px;width:64px;height:64px;margin-left:-32px;opacity:0;pointer-events:none}
+.capsule.drop{animation:drop .7s cubic-bezier(.3,1.6,.5,1) forwards}
+@keyframes drop{0%{opacity:1;transform:translateY(-40px) scale(.5)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.machine.charge svg{animation:glow .6s ease-in-out infinite alternate}
+@keyframes glow{from{filter:drop-shadow(0 0 0 rgba(255,211,92,0))}to{filter:drop-shadow(0 0 22px rgba(255,211,92,.75))}}
+.capsule.wobble{opacity:1;animation:wobble .9s ease}
+@keyframes wobble{0%,100%{transform:rotate(0)}15%{transform:rotate(-18deg)}30%{transform:rotate(16deg)}45%{transform:rotate(-12deg)}60%{transform:rotate(10deg)}75%{transform:rotate(-5deg)}}
+.capsule.pop{opacity:1}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:50}
+.flash.on{animation:flash .5s ease}
+@keyframes flash{0%{opacity:0}20%{opacity:.85}100%{opacity:0}}
+.confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.gachaHint{transition:transform .2s}
+.gachaHint.pulse{animation:pulse .5s ease infinite alternate;color:var(--gold);font-weight:900;font-size:16px}
+@keyframes pulse{to{transform:scale(1.12)}}
+.played{text-align:center}
+.played .big{font-size:48px}
+.capsule.pop .top{animation:popTop .5s ease forwards}
+.capsule.pop .bot{animation:popBot .5s ease forwards}
+@keyframes popTop{to{transform:translate(-18px,-34px) rotate(-35deg);opacity:0}}
+@keyframes popBot{to{transform:translate(18px,30px) rotate(25deg);opacity:0}}
+.capsule .top,.capsule .bot{position:absolute;left:0;width:64px;height:32px}
+.capsule .top{top:0;border-radius:32px 32px 0 0;background:var(--cap,#ff7a2f)}
+.capsule .bot{bottom:0;border-radius:0 0 32px 32px;background:#f6efe7}
+.gachaHint{text-align:center;color:var(--mute);font-size:13px;margin-top:70px}
+
+.result{text-align:center;padding:20px 10px}
+.result .big{font-size:64px;line-height:1;animation:bounce .6s cubic-bezier(.3,1.8,.5,1)}
+@keyframes bounce{from{transform:scale(0)}to{transform:scale(1)}}
+.result h2{font-size:24px;font-weight:900;margin-top:10px}
+.result h2.win{color:var(--gold)}
+.ticket{margin-top:14px;background:#fff8ee;color:#2a1a10;border-radius:14px;padding:16px;text-align:center;position:relative}
+.ticket::before,.ticket::after{content:"";position:absolute;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:var(--panel)}
+.ticket::before{left:-9px}.ticket::after{right:-9px}
+.ticket .code{font-size:26px;font-weight:900;letter-spacing:.12em;margin:6px 0}
+.ticket small{font-size:12px;color:#7a6050;display:block;line-height:1.6}
+.used{display:inline-block;margin-top:8px;padding:6px 14px;border-radius:99px;font-size:13px;font-weight:700;background:#2a1a10;color:#fff8ee}
+.used.done{background:#9a8a7c}
+
+.section-title{font-size:15px;font-weight:900;margin-bottom:6px}
+.small{font-size:12px;color:var(--mute);line-height:1.7}
+textarea,input[type=text]{width:100%;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:15px;line-height:1.7;margin-top:10px}
+textarea{min-height:110px;resize:vertical}
+.hq{border-color:#7a4a30;background:linear-gradient(180deg,#3a271c,var(--panel))}
+.sent{color:var(--green);font-size:14px;font-weight:700;margin-top:10px;text-align:center}
+.google{border-color:var(--line)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;margin-top:12px;background:#fff;color:#202124;font-weight:900;font-size:15px;text-decoration:none}
+.copyrow{display:flex;gap:8px;margin-top:8px}
+.copyrow button{flex:1;padding:10px;border-radius:10px;background:var(--panel2);color:var(--ink);font-size:13px;font-weight:700}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:#45301f;color:var(--ember2);font-weight:700;margin-bottom:6px}
+
+/* admin */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:22px;font-weight:900}
+.stat span{font-size:11px;color:var(--mute)}
+.filters{display:flex;gap:6px;margin:16px 0 8px}
+.filters button{padding:7px 12px;border-radius:99px;background:var(--panel2);color:var(--mute);font-size:13px;font-weight:700}
+.filters button.on{background:var(--ember);color:#2a1306}
+.rec{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:8px}
+.rec.alert{border-color:var(--red)}
+.rec .head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rec .st{color:var(--gold);font-size:15px;letter-spacing:1px}
+.rec .meta{font-size:11px;color:var(--mute)}
+.flag{font-size:11px;background:var(--red);color:#fff;padding:2px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.rec dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px;margin-top:10px}
+.rec dt{color:var(--mute)}
+.rec .msg{margin-top:10px;background:#1f1915;border-left:3px solid var(--red);padding:8px 10px;border-radius:6px;font-size:13px;line-height:1.6}
+.mail{margin-top:10px;font-size:12px;background:#f4f1ec;color:#2a2018;border-radius:10px;padding:10px;line-height:1.6;display:none;white-space:pre-wrap}
+.mail.on{display:block}
+.linkbtn{background:none;color:var(--ember2);font-size:12px;font-weight:700;margin-top:8px}
+.prizeTable{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.prizeTable td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.prizeTable input{width:60px;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:5px;font-family:inherit;text-align:right}
+.note{font-size:12px;color:var(--mute);line-height:1.8;margin-top:8px}
+.note li{margin-left:1.2em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="login">
+    <div class="hero"><div class="shop">やまびこ畜産 京橋店</div><h1 style="font-size:22px">本社 管理画面</h1></div>
+    <div class="card">
+      <div class="section-title">パスワード</div>
+      <input type="password" id="pw" style="width:100%;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:16px;margin-top:10px" onkeydown="if(event.key==='Enter')login()">
+      <button class="btn" id="loginBtn" onclick="login()">ログイン</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+  </div>
+  <!-- ===== HQ ===== -->
+  <div id="hq" style="display:none">
+    <div class="hero" style="text-align:left;padding-top:0">
+      <div class="shop">本社 管理画面</div>
+      <h1 style="font-size:20px">アンケート一覧</h1>
+      <p class="small">すべての回答が届きます。☆3以下は「要確認」として表示します。</p><div class="filters" id="period" style="margin-top:10px"><button data-d="1" onclick="setDays(1,this)">今日</button><button data-d="7" onclick="setDays(7,this)">7日間</button><button class="on" data-d="31" onclick="setDays(31,this)">31日間</button><button data-d="366" onclick="setDays(366,this)">1年</button></div>
+    </div>
+    <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat"><b id="stCount">0</b><span>回答数</span></div>
+      <div class="stat"><b id="stAvg">-</b><span>平均☆</span></div>
+      <div class="stat"><b id="stAlert">0</b><span>要確認</span></div>
+      <div class="stat"><b id="stWin">0</b><span>当たり</span></div>
+    </div>
+    <div class="filters">
+      <button class="on" data-f="all" onclick="setFilter('all',this)">すべて</button>
+      <button data-f="alert" onclick="setFilter('alert',this)">要確認（☆3以下）</button>
+      <button data-f="good" onclick="setFilter('good',this)">☆4以上</button>
+    </div>
+    <div id="recs"></div>
+
+    <div class="card">
+      <div class="section-title">ガチャ景品と確率</div>
+      <p class="small">合計が100%になるように設定し、「保存」を押してください。</p>
+      <table class="prizeTable" id="prizeTable"></table>
+      <div class="err" id="prizeErr" style="text-align:left"></div>
+      <button class="btn sub" id="saveRates" onclick="saveRates()">保存</button>
+    </div>
+
+    <div class="card">
+      <div class="section-title">パスワード変更</div>
+      <input type="password" id="newPw" placeholder="新しいパスワード（8文字以上）" style="width:100%;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:15px;margin-top:10px">
+      <button class="btn sub" onclick="changePw()">変更する</button>
+      <div class="err" id="pwMsg"></div>
+    </div>
+    <button class="btn sub" onclick="logout()">ログアウト</button>
+  </div>
+
+</div>
+<script>
+const SB_URL='https://lgdplsrkjuyjbwotkvov.supabase.co',SB_KEY='sb_publishable_YncfGk-EczGBB9s_TQ-Ntg_J_kpEgJn';
+async function rpc(fn,args){
+  const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
+  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}
+  if(!r.ok){const e=new Error((j&&j.message)||('HTTP '+r.status));e.status=r.status;throw e}
+  return j;
+}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const QUESTIONS=[
+  {id:'service',q:'スタッフの接客はいかがでしたか？',opts:['とても良い','良い','普通','やや不満','不満']},
+  {id:'explain',q:'お肉の焼き方説明はいかがでしたか？',opts:['参考になった','知ってた','参考にならなかった']},
+  {id:'meat',q:'お肉の味、質はいかがでしたか？',opts:['とても満足','満足','普通','やや不満','不満']},
+  {id:'speed',q:'提供スピードは？',opts:['ちょうどよい','少し待った','かなり待った']},
+  {id:'clean',q:'店内の雰囲気、清潔さは？',opts:['とても良い','良い','普通','気になる点があった']},
+  {id:'best',q:'一番美味しかったメニューは？',opts:['タン','ハラミ','ロース','カルビ','ごはん','肉吸い','サイドメニュー']}
+];
+let PW='',records=[],prizes=[],filter='all',days=31;
+function fmt(t){const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`}
+async function load(){
+  const j=await rpc('admin_list',{p_password:PW,p_days:days});records=j.responses||[];prizes=j.prizes||[];renderHq();
+}
+async function login(){
+  const b=document.getElementById('loginBtn'),e=document.getElementById('loginErr');PW=document.getElementById('pw').value;
+  b.disabled=true;b.textContent='確認中…';e.textContent='';
+  try{await load();try{sessionStorage.setItem('ymb_pw',PW)}catch(x){}
+    document.getElementById('login').style.display='none';document.getElementById('hq').style.display='block'}
+  catch(x){e.textContent=x.message==='unauthorized'?'パスワードが違います':'接続できませんでした'}
+  finally{b.disabled=false;b.textContent='ログイン'}
+}
+function logout(){try{sessionStorage.removeItem('ymb_pw')}catch(x){}location.reload()}
+function setFilter(f,b){filter=f;document.querySelectorAll('#hq > .filters button').forEach(x=>x.classList.toggle('on',x===b));renderHq()}
+async function setDays(d,b){days=d;document.querySelectorAll('#period button').forEach(x=>x.classList.toggle('on',x===b));await load()}
+function renderHq(){
+  document.getElementById('stCount').textContent=records.length;
+  document.getElementById('stAvg').textContent=records.length?(records.reduce((a,r)=>a+r.stars,0)/records.length).toFixed(1):'-';
+  document.getElementById('stAlert').textContent=records.filter(r=>r.stars<=3).length;
+  document.getElementById('stWin').textContent=records.filter(r=>!r.lose).length;
+  const list=records.filter(r=>filter==='all'||(filter==='alert'?r.stars<=3:r.stars>=4));
+  const box=document.getElementById('recs');
+  if(!list.length){box.innerHTML='<p class="small" style="text-align:center;padding:20px">該当する回答はありません</p>';}
+  else box.innerHTML=list.map(r=>{
+    const alert=r.stars<=3;
+    const dl=QUESTIONS.map(q=>`<dt>${q.q.replace(/[？?]$/,'').slice(0,12)}</dt><dd>${esc((r.answers||{})[q.id]||'-')}</dd>`).join('');
+    return `<div class="rec ${alert?'alert':''}">
+      <div class="head"><div><span class="st">${'★'.repeat(r.stars)}<span style="color:#5a4a3e">${'★'.repeat(5-r.stars)}</span></span>
+      <div class="meta">${fmt(r.time)} ／ ガチャ：${esc(r.prize)}${r.lose?'':(r.redeemed?'（引換済）':'（未引換）')}</div></div>${alert?'<span class="flag">要確認</span>':''}</div>
+      <dl>${dl}</dl>
+      ${r.msg?`<div class="msg">${esc(r.msg)}${r.contact?'<br><span class="meta">連絡先：'+esc(r.contact)+'</span>':''}</div>`:''}
+    </div>`}).join('');
+  renderPrizes();
+}
+function renderPrizes(){
+  const t=document.getElementById('prizeTable');
+  t.innerHTML=prizes.map((p,i)=>`<tr><td>${p.icon||'—'} ${esc(p.name)}</td><td style="text-align:right"><input type="number" min="0" max="100" value="${p.rate}" oninput="prizes[${i}].rate=Math.max(0,Number(this.value)||0);checkRates()"> %</td></tr>`).join('')+
+    `<tr><td><b>合計</b></td><td style="text-align:right"><b id="rateSum"></b></td></tr>`;
+  checkRates();
+}
+function checkRates(){const s=prizes.reduce((a,p)=>a+Number(p.rate),0);document.getElementById('rateSum').textContent=s+' %';
+  const e=document.getElementById('prizeErr');e.style.color='';e.textContent=s===100?'':'合計が100%になっていません（このままでも比率で抽選されます）'}
+async function saveRates(){
+  const b=document.getElementById('saveRates'),e=document.getElementById('prizeErr');b.disabled=true;b.textContent='保存中…';
+  const m={};prizes.forEach(p=>m[p.id]=p.rate);
+  try{await rpc('admin_set_rates',{p_password:PW,p_rates:m});await load();e.style.color='var(--green)';e.textContent='保存しました'}
+  catch(x){e.style.color='';e.textContent='保存できませんでした'}finally{b.disabled=false;b.textContent='保存'}
+}
+async function changePw(){
+  const n=document.getElementById('newPw').value,m=document.getElementById('pwMsg');m.style.color='';
+  if(n.length<8){m.textContent='8文字以上にしてください';return}
+  try{await rpc('admin_change_password',{p_password:PW,p_new:n});PW=n;try{sessionStorage.setItem('ymb_pw',PW)}catch(x){}
+    document.getElementById('newPw').value='';m.style.color='var(--green)';m.textContent='変更しました'}
+  catch(x){m.textContent='変更できませんでした'}
+}
+(async()=>{let s=null;try{s=sessionStorage.getItem('ymb_pw')}catch(x){}
+  if(s){document.getElementById('pw').value=s;login()}})();
+</script>
+</body>
+</html>

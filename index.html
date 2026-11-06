@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>やまびこ畜産 京橋店 アンケート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1c1714; --panel:#2a221d; --panel2:#352b24; --line:#4a3c32;
+  --ink:#f6efe7; --mute:#b8a898; --ember:#ff7a2f; --ember2:#ffb067;
+  --gold:#ffd35c; --red:#e8584a; --green:#5fc48a; --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Zen Maru Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;
+  background-image:radial-gradient(circle at 50% -10%,#3b2a1f 0,transparent 60%);}
+button{font-family:inherit;cursor:pointer;border:none}
+.wrap{max-width:460px;margin:0 auto;padding:16px 16px 48px}
+.demobar{display:flex;gap:6px;background:#0f0c0a;border:1px dashed var(--line);border-radius:12px;padding:6px;margin-bottom:16px}
+.demobar button{flex:1;padding:8px;border-radius:8px;background:transparent;color:var(--mute);font-size:13px;font-weight:700}
+.demobar button.on{background:var(--panel2);color:var(--ink)}
+.demonote{font-size:11px;color:var(--mute);text-align:center;margin:-10px 0 14px}
+.screen{display:none;animation:fade .35s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hero{text-align:center;padding:18px 0 8px}
+.shop{font-size:13px;color:var(--ember2);letter-spacing:.15em;font-weight:700}
+.table{display:inline-block;margin-top:6px;font-size:12px;background:var(--panel2);padding:3px 10px;border-radius:99px;color:var(--mute)}
+h1{font-size:24px;font-weight:900;line-height:1.4;margin:12px 0 6px}
+h1 em{font-style:normal;color:var(--gold)}
+.lead{color:var(--mute);font-size:14px;line-height:1.7}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:14px}
+.qnum{font-size:11px;color:var(--ember2);font-weight:700;letter-spacing:.1em}
+.qtext{font-size:16px;font-weight:700;margin:4px 0 12px;line-height:1.5}
+.stars{display:flex;justify-content:center;gap:6px}
+.star{font-size:40px;background:none;color:#5a4a3e;transition:transform .15s,color .15s;line-height:1}
+.star.on{color:var(--gold);text-shadow:0 0 14px rgba(255,211,92,.45)}
+.star:active{transform:scale(1.2)}
+.starlabel{text-align:center;color:var(--mute);font-size:13px;margin-top:8px;min-height:18px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;padding:12px 14px;border-radius:12px;background:var(--panel2);color:var(--ink);font-size:15px;border:2px solid transparent;transition:.15s}
+.opt.on{border-color:var(--ember);background:#45301f}
+.btn{display:block;width:100%;padding:16px;border-radius:14px;font-size:17px;font-weight:900;margin-top:18px;
+  background:linear-gradient(180deg,var(--ember2),var(--ember));color:#2a1306;box-shadow:0 6px 0 #a8461a;transition:.1s}
+.btn:active{transform:translateY(3px);box-shadow:0 3px 0 #a8461a}
+.btn:disabled{background:#4a3c32;color:#8a7a6c;box-shadow:none;cursor:not-allowed}
+.btn.sub{background:var(--panel2);color:var(--ink);box-shadow:0 4px 0 #1a1411;font-size:15px}
+.err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:16px}
+.progress{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:14px}
+.progress i{display:block;height:100%;background:var(--ember);width:0;transition:width .3s}
+
+/* gacha */
+.machine{position:relative;width:260px;margin:10px auto 0}
+.machine svg{width:100%;display:block}
+#handle{transform-origin:130px 240px;transition:transform 2.7s cubic-bezier(.35,0,.25,1)}
+#handle.turn{transform:rotate(1080deg)}
+#balls{transform-origin:130px 110px}
+#balls.shake{animation:shake .45s ease 6}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-6deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+.capsule{position:absolute;left:50%;top:290px;width:64px;height:64px;margin-left:-32px;opacity:0;pointer-events:none}
+.capsule.drop{animation:drop .7s cubic-bezier(.3,1.6,.5,1) forwards}
+@keyframes drop{0%{opacity:1;transform:translateY(-40px) scale(.5)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.machine.charge svg{animation:glow .6s ease-in-out infinite alternate}
+@keyframes glow{from{filter:drop-shadow(0 0 0 rgba(255,211,92,0))}to{filter:drop-shadow(0 0 22px rgba(255,211,92,.75))}}
+.capsule.wobble{opacity:1;animation:wobble .9s ease}
+@keyframes wobble{0%,100%{transform:rotate(0)}15%{transform:rotate(-18deg)}30%{transform:rotate(16deg)}45%{transform:rotate(-12deg)}60%{transform:rotate(10deg)}75%{transform:rotate(-5deg)}}
+.capsule.pop{opacity:1}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:50}
+.flash.on{animation:flash .5s ease}
+@keyframes flash{0%{opacity:0}20%{opacity:.85}100%{opacity:0}}
+.confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.gachaHint{transition:transform .2s}
+.gachaHint.pulse{animation:pulse .5s ease infinite alternate;color:var(--gold);font-weight:900;font-size:16px}
+@keyframes pulse{to{transform:scale(1.12)}}
+.played{text-align:center}
+.played .big{font-size:48px}
+.capsule.pop .top{animation:popTop .5s ease forwards}
+.capsule.pop .bot{animation:popBot .5s ease forwards}
+@keyframes popTop{to{transform:translate(-18px,-34px) rotate(-35deg);opacity:0}}
+@keyframes popBot{to{transform:translate(18px,30px) rotate(25deg);opacity:0}}
+.capsule .top,.capsule .bot{position:absolute;left:0;width:64px;height:32px}
+.capsule .top{top:0;border-radius:32px 32px 0 0;background:var(--cap,#ff7a2f)}
+.capsule .bot{bottom:0;border-radius:0 0 32px 32px;background:#f6efe7}
+.gachaHint{text-align:center;color:var(--mute);font-size:13px;margin-top:70px}
+
+.result{text-align:center;padding:20px 10px}
+.result .big{font-size:64px;line-height:1;animation:bounce .6s cubic-bezier(.3,1.8,.5,1)}
+@keyframes bounce{from{transform:scale(0)}to{transform:scale(1)}}
+.result h2{font-size:24px;font-weight:900;margin-top:10px}
+.result h2.win{color:var(--gold)}
+.ticket{margin-top:14px;background:#fff8ee;color:#2a1a10;border-radius:14px;padding:16px;text-align:center;position:relative}
+.ticket::before,.ticket::after{content:"";position:absolute;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:var(--panel)}
+.ticket::before{left:-9px}.ticket::after{right:-9px}
+.ticket .code{font-size:26px;font-weight:900;letter-spacing:.12em;margin:6px 0}
+.ticket small{font-size:12px;color:#7a6050;display:block;line-height:1.6}
+.used{display:inline-block;margin-top:8px;padding:6px 14px;border-radius:99px;font-size:13px;font-weight:700;background:#2a1a10;color:#fff8ee}
+.used.done{background:#9a8a7c}
+
+.section-title{font-size:15px;font-weight:900;margin-bottom:6px}
+.small{font-size:12px;color:var(--mute);line-height:1.7}
+textarea,input[type=text]{width:100%;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:15px;line-height:1.7;margin-top:10px}
+textarea{min-height:110px;resize:vertical}
+.hq{border-color:#7a4a30;background:linear-gradient(180deg,#3a271c,var(--panel))}
+.sent{color:var(--green);font-size:14px;font-weight:700;margin-top:10px;text-align:center}
+.google{border-color:var(--line)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;margin-top:12px;background:#fff;color:#202124;font-weight:900;font-size:15px;text-decoration:none}
+.copyrow{display:flex;gap:8px;margin-top:8px}
+.copyrow button{flex:1;padding:10px;border-radius:10px;background:var(--panel2);color:var(--ink);font-size:13px;font-weight:700}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:#45301f;color:var(--ember2);font-weight:700;margin-bottom:6px}
+
+/* admin */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:22px;font-weight:900}
+.stat span{font-size:11px;color:var(--mute)}
+.filters{display:flex;gap:6px;margin:16px 0 8px}
+.filters button{padding:7px 12px;border-radius:99px;background:var(--panel2);color:var(--mute);font-size:13px;font-weight:700}
+.filters button.on{background:var(--ember);color:#2a1306}
+.rec{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:8px}
+.rec.alert{border-color:var(--red)}
+.rec .head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rec .st{color:var(--gold);font-size:15px;letter-spacing:1px}
+.rec .meta{font-size:11px;color:var(--mute)}
+.flag{font-size:11px;background:var(--red);color:#fff;padding:2px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.rec dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px;margin-top:10px}
+.rec dt{color:var(--mute)}
+.rec .msg{margin-top:10px;background:#1f1915;border-left:3px solid var(--red);padding:8px 10px;border-radius:6px;font-size:13px;line-height:1.6}
+.mail{margin-top:10px;font-size:12px;background:#f4f1ec;color:#2a2018;border-radius:10px;padding:10px;line-height:1.6;display:none;white-space:pre-wrap}
+.mail.on{display:block}
+.linkbtn{background:none;color:var(--ember2);font-size:12px;font-weight:700;margin-top:8px}
+.prizeTable{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.prizeTable td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.prizeTable input{width:60px;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:5px;font-family:inherit;text-align:right}
+.note{font-size:12px;color:var(--mute);line-height:1.8;margin-top:8px}
+.note li{margin-left:1.2em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== GUEST ===== -->
+  <div id="guest">
+
+    <section class="screen on" id="s-top">
+      <div class="hero">
+        <div class="shop">やまびこ畜産 京橋店</div>
+        <h1>アンケートに答えて<br><em>ガチャ</em>に挑戦！</h1>
+        <p class="lead">7問・約30秒で終わります。<br>シャーベットやアイスクリームが当たるかも（ハズレもあります）<br><span style="font-size:12px">※ガチャはお一人様1日1回まで</span></p>
+      </div>
+      <div class="machine" style="width:200px">
+        <svg viewBox="0 0 260 300" aria-hidden="true">
+          <circle cx="130" cy="110" r="96" fill="#fff" fill-opacity=".08" stroke="#f6efe7" stroke-opacity=".3" stroke-width="3"/>
+          <circle cx="95" cy="140" r="22" fill="#ff7a2f"/><circle cx="150" cy="150" r="22" fill="#ffd35c"/>
+          <circle cx="120" cy="95" r="22" fill="#5fc48a"/><circle cx="170" cy="105" r="22" fill="#e8584a"/>
+          <circle cx="80" cy="95" r="20" fill="#6aa8ff"/>
+          <rect x="50" y="195" width="160" height="95" rx="16" fill="#e8584a"/>
+          <circle cx="130" cy="240" r="22" fill="#fff"/><rect x="124" y="222" width="12" height="36" rx="6" fill="#e8584a"/>
+        </svg>
+      </div>
+      <button class="btn" id="startBtn" onclick="startSurvey()" disabled>読み込み中…</button>
+      <div class="card played" id="playedBox" style="display:none"></div>
+    </section>
+
+    <section class="screen" id="s-q">
+      <div class="progress"><i id="prog"></i></div>
+      <div class="card">
+        <div class="qnum">Q1</div>
+        <div class="qtext">本日の満足度を教えてください</div>
+        <div class="stars" id="stars"></div>
+        <div class="starlabel" id="starlabel">タップして選択</div>
+      </div>
+      <div id="questions"></div>
+      <button class="btn" id="submitBtn" onclick="submitSurvey()">回答してガチャへ</button>
+      <div class="err" id="err"></div>
+    </section>
+
+    <section class="screen" id="s-gacha">
+      <div class="hero" style="padding-bottom:0">
+        <h1>ご回答ありがとうございます！</h1>
+        <p class="lead">ハンドルをタップしてガチャを回してください</p>
+      </div>
+      <div class="machine" id="machine">
+        <svg viewBox="0 0 260 300">
+          <circle cx="130" cy="110" r="100" fill="#fff" fill-opacity=".07" stroke="#f6efe7" stroke-opacity=".35" stroke-width="3"/>
+          <g id="balls">
+            <circle cx="88" cy="150" r="24" fill="#ff7a2f"/><circle cx="140" cy="160" r="24" fill="#ffd35c"/>
+            <circle cx="186" cy="140" r="22" fill="#6aa8ff"/><circle cx="115" cy="110" r="24" fill="#5fc48a"/>
+            <circle cx="168" cy="98" r="22" fill="#e8584a"/><circle cx="75" cy="102" r="20" fill="#c58cff"/>
+            <circle cx="125" cy="62" r="20" fill="#ff7a2f"/><circle cx="178" cy="182" r="18" fill="#5fc48a"/>
+            <circle cx="96" cy="190" r="16" fill="#ffd35c"/>
+          </g>
+          <ellipse cx="100" cy="60" rx="30" ry="14" fill="#fff" fill-opacity=".12" transform="rotate(-30 100 60)"/>
+          <rect x="40" y="200" width="180" height="96" rx="18" fill="#e8584a"/>
+          <rect x="105" y="276" width="50" height="20" rx="6" fill="#2a1a10"/>
+          <g id="handle" style="cursor:pointer" onclick="spin()">
+            <circle cx="130" cy="240" r="26" fill="#fff"/>
+            <rect x="123" y="218" width="14" height="44" rx="7" fill="#e8584a"/>
+          </g>
+        </svg>
+        <div class="capsule" id="capsule"><div class="top"></div><div class="bot"></div></div>
+      </div>
+      <p class="gachaHint" id="gachaHint">▲ ハンドルをタップ</p>
+      <div class="flash" id="flash"></div>
+    </section>
+
+    <section class="screen" id="s-result">
+      <div class="card result" id="resultBox"></div>
+
+      <div class="card hq" id="hqBox" style="display:none">
+        <span class="tag">本社に直接届きます</span>
+        <div class="section-title">ご不便をおかけし申し訳ありません</div>
+        <p class="small">改善のため、気になった点を本社に直接お聞かせください。店舗スタッフには見えません。</p>
+        <textarea id="hqMsg" placeholder="例：注文した料理がなかなか届かなかった"></textarea>
+        <input type="text" id="hqContact" placeholder="ご連絡先（任意）メールまたは電話番号">
+        <button class="btn sub" id="hqSend" onclick="sendHq()">本社に送る</button>
+        <div class="sent" id="hqSent" style="display:none"></div>
+      </div>
+
+      <div class="card google">
+        <div class="section-title">よろしければGoogleでも感想をお聞かせください</div>
+        <p class="small">任意です。ガチャや景品とは関係ありません。</p>
+        <p class="small" style="margin-top:8px">選んだ回答をもとに文章のたたき台を作りました。ご自身の言葉に自由に書き直してお使いください。</p>
+        <textarea id="hint"></textarea>
+        <div class="copyrow"><button onclick="copyHint(this)">文章をコピー</button><button onclick="remakeHint()">作り直す</button></div>
+        <a class="gbtn" href="https://search.google.com/local/writereview?placeid=ChIJGyddMczhAGARJlugzY6oG1s" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2.1 5-4.4 6.6v5.5h7.1c4.2-3.9 6.5-9.6 6.5-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.6-3.9-12.3-9.1H4.4v5.7C8 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.7 28.2c-.4-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.4C2.9 17.1 2 20.4 2 24s.9 6.9 2.4 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8 6.9 4.4 14.1l7.3 5.7c1.7-5.2 6.6-9.1 12.3-9.1z"/></svg>
+          Googleでクチコミを書く
+        </a>
+        <p class="small" style="margin-top:8px;text-align:center">※Googleのクチコミ投稿画面が開きます</p>
+      </div>
+      
+    </section>
+  </div>
+
+</div>
+<script>
+const SB_URL='https://lgdplsrkjuyjbwotkvov.supabase.co',SB_KEY='sb_publishable_YncfGk-EczGBB9s_TQ-Ntg_J_kpEgJn';
+async function rpc(fn,args){
+  const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
+  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}
+  if(!r.ok){const e=new Error((j&&j.message)||('HTTP '+r.status));e.status=r.status;throw e}
+  return j;
+}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const QUESTIONS=[
+  {id:'service',q:'スタッフの接客はいかがでしたか？',opts:['とても良い','良い','普通','やや不満','不満']},
+  {id:'explain',q:'お肉の焼き方説明はいかがでしたか？',opts:['参考になった','知ってた','参考にならなかった']},
+  {id:'meat',q:'お肉の味、質はいかがでしたか？',opts:['とても満足','満足','普通','やや不満','不満']},
+  {id:'speed',q:'提供スピードは？',opts:['ちょうどよい','少し待った','かなり待った']},
+  {id:'clean',q:'店内の雰囲気、清潔さは？',opts:['とても良い','良い','普通','気になる点があった']},
+  {id:'best',q:'一番美味しかったメニューは？',opts:['タン','ハラミ','ロース','カルビ','ごはん','肉吸い','サイドメニュー']}
+];
+const STAR_LABELS=['','不満','やや不満','普通','満足','大満足'];
+const COLORS={'シャーベット':'#6aa8ff','アイスクリーム':'#ffd35c','ドリンク1杯':'#5fc48a'};
+let state={stars:0,answers:{},res:null};
+let today=null;
+
+function deviceId(){
+  let id=null;try{id=localStorage.getItem('ymb_device')}catch(e){}
+  if(!id){id=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)));try{localStorage.setItem('ymb_device',id)}catch(e){}}
+  return id;
+}
+const DEVICE=deviceId();
+function nextReset(){const n=new Date();const r=new Date(n);r.setHours(8,0,0,0);if(n>=r)r.setDate(r.getDate()+1);return `${r.getMonth()+1}/${r.getDate()} 朝8時`}
+
+async function init(){
+  const btn=document.getElementById('startBtn');
+  try{today=await rpc('get_today',{p_device:DEVICE})}catch(e){today=null}
+  btn.disabled=false;btn.textContent='はじめる';renderTop();
+}
+function ticketHtml(p,note){
+  return `<div class="ticket" style="margin-top:12px"><small>${note}</small><div class="code">${esc(p.code)}</div><small>${esc(p.issued)} 発行 ／ 本日のみ有効<br>※この画面は後から開き直しても表示されます</small>
+   <button class="used ${p.redeemed?'done':''}" ${p.redeemed?'disabled':''} onclick="markUsed(this)">${p.redeemed?'引換済み':'スタッフ用：引換済みにする'}</button></div>`;
+}
+function renderTop(){
+  const p=today,box=document.getElementById('playedBox'),btn=document.getElementById('startBtn');
+  if(!p){box.style.display='none';btn.style.display='block';return}
+  btn.style.display='none';box.style.display='block';
+  box.innerHTML=`<div class="big">🎰</div><div class="section-title" style="margin-top:8px">本日のガチャは参加済みです</div>
+    <p class="small">ご協力ありがとうございました。次回は ${nextReset()} 以降に参加できます。</p>`+
+    (p.lose?'':ticketHtml(p,'本日の当たり：'+esc(p.prize)+'　スタッフにお見せください'));
+}
+function startSurvey(){if(today){renderTop();return}go('s-q')}
+
+function buildSurvey(){
+  const s=document.getElementById('stars');s.innerHTML='';
+  for(let i=1;i<=5;i++){const b=document.createElement('button');b.className='star';b.textContent='★';b.setAttribute('aria-label','☆'+i);
+    b.onclick=()=>{state.stars=i;paintStars();updateProg()};s.appendChild(b)}
+  const wrap=document.getElementById('questions');wrap.innerHTML='';
+  QUESTIONS.forEach((q,qi)=>{
+    const c=document.createElement('div');c.className='card';
+    c.innerHTML=`<div class="qnum">Q${qi+2}</div><div class="qtext">${q.q}</div><div class="opts"></div>`;
+    const o=c.querySelector('.opts');
+    q.opts.forEach(t=>{const b=document.createElement('button');b.className='opt';b.textContent=t;
+      b.onclick=()=>{state.answers[q.id]=t;o.querySelectorAll('.opt').forEach(x=>x.classList.toggle('on',x===b));updateProg()};o.appendChild(b)});
+    wrap.appendChild(c);
+  });
+  paintStars();updateProg();
+}
+function paintStars(){document.querySelectorAll('.star').forEach((b,i)=>b.classList.toggle('on',i<state.stars));
+  document.getElementById('starlabel').textContent=state.stars?STAR_LABELS[state.stars]:'タップして選択'}
+function updateProg(){const done=(state.stars?1:0)+Object.keys(state.answers).length;
+  document.getElementById('prog').style.width=(done/(QUESTIONS.length+1)*100)+'%';document.getElementById('err').textContent=''}
+function go(id){document.querySelectorAll('#guest .screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0)}
+
+async function submitSurvey(){
+  const missing=(state.stars?0:1)+QUESTIONS.filter(q=>!state.answers[q.id]).length;
+  const err=document.getElementById('err'),btn=document.getElementById('submitBtn');
+  if(missing){err.textContent=`未回答の質問が${missing}つあります`;return}
+  btn.disabled=true;btn.textContent='送信中…';
+  try{
+    const res=await rpc('submit_survey',{p_device:DEVICE,p_stars:state.stars,p_answers:state.answers});
+    if(res.already){today=res;go('s-top');renderTop();return}
+    state.res=res;go('s-gacha');
+  }catch(e){err.textContent='送信できませんでした。電波の良い場所でもう一度お試しください。'}
+  finally{btn.disabled=false;btn.textContent='回答してガチャへ'}
+}
+
+let spinning=false,spun=false;
+function spin(){
+  if(spinning||spun||!state.res)return;spinning=true;spun=true;
+  const p=state.res,hint=document.getElementById('gachaHint'),m=document.getElementById('machine');
+  hint.classList.add('pulse');hint.textContent='ガラガラ…';
+  document.getElementById('handle').classList.add('turn');
+  document.getElementById('balls').classList.add('shake');m.classList.add('charge');
+  const cap=document.getElementById('capsule');cap.style.setProperty('--cap',COLORS[p.prize]||'#c58cff');
+  setTimeout(()=>hint.textContent='ガラガラガラ…！',900);
+  setTimeout(()=>hint.textContent='なにが出るかな…？',1800);
+  setTimeout(()=>{m.classList.remove('charge');cap.classList.add('drop');hint.textContent='出た！'},2800);
+  setTimeout(()=>{cap.classList.add('wobble');hint.textContent='開けるよ…'},3600);
+  setTimeout(()=>{cap.classList.add('pop');const f=document.getElementById('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on')},4500);
+  setTimeout(()=>{hint.classList.remove('pulse');showResult();spinning=false;if(!p.lose)confetti()},5000);
+}
+function confetti(){const cols=['#ff7a2f','#ffd35c','#5fc48a','#6aa8ff','#e8584a','#c58cff'];
+  for(let i=0;i<70;i++){const c=document.createElement('div');c.className='confetti';
+    c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];
+    c.style.animationDuration=(1.8+Math.random()*1.8)+'s';c.style.animationDelay=(Math.random()*.6)+'s';
+    if(i%3==0)c.style.borderRadius='50%';document.body.appendChild(c);setTimeout(()=>c.remove(),4500)}}
+function showResult(){
+  const p=state.res;today=p;
+  const box=document.getElementById('resultBox');
+  if(p.lose){
+    box.innerHTML=`<div class="big">🙏</div><h2>残念、ハズレ…</h2><p class="lead" style="margin-top:8px">ご協力ありがとうございました！<br>またのご来店をお待ちしています。</p>`;
+  }else{
+    box.innerHTML=`<div class="big">${esc(p.icon)}</div><h2 class="win">当たり！</h2><p class="lead" style="margin-top:4px;font-size:18px;color:var(--ink);font-weight:900">${esc(p.prize)}</p>`+ticketHtml(p,'スタッフにこの画面をお見せください');
+  }
+  document.getElementById('hqBox').style.display=state.stars<=3?'block':'none';
+  document.getElementById('hint').value=makeHint(0);
+  go('s-result');
+}
+let usedArm=false;
+async function markUsed(b){
+  if(!usedArm){usedArm=true;b.textContent='もう一度タップで引換確定';setTimeout(()=>{if(usedArm&&!b.disabled){usedArm=false;b.textContent='スタッフ用：引換済みにする'}},4000);return}
+  usedArm=false;b.disabled=true;b.textContent='処理中…';
+  try{await rpc('redeem',{p_device:DEVICE});b.textContent='引換済み';b.classList.add('done');if(today)today.redeemed=true}
+  catch(e){b.disabled=false;b.textContent='通信エラー。もう一度タップ'}
+}
+async function sendHq(){
+  const m=document.getElementById('hqMsg').value.trim();
+  if(!m){document.getElementById('hqMsg').focus();return}
+  const btn=document.getElementById('hqSend'),s=document.getElementById('hqSent');btn.disabled=true;btn.textContent='送信中…';
+  try{
+    const ok=await rpc('send_message',{p_id:state.res.id,p_token:state.res.token,p_msg:m,p_contact:document.getElementById('hqContact').value.trim()});
+    btn.style.display='none';s.style.display='block';
+    s.textContent=ok?'本社に送信しました。貴重なご意見ありがとうございます。':'すでに送信済みです。ありがとうございます。';
+  }catch(e){btn.disabled=false;btn.textContent='本社に送る';s.style.display='block';s.style.color='var(--red)';s.textContent='送信できませんでした。もう一度お試しください。'}
+}
+/* review draft */
+const PHRASES={
+  service:{'とても良い':['スタッフさんの接客がとても気持ちよかったです。','スタッフさんの対応がとても丁寧でした。'],
+    '良い':['スタッフさんの接客も良かったです。','スタッフさんの対応も感じが良かったです。'],
+    '普通':['',''],
+    'やや不満':['スタッフさんの接客は少し気になるところがありました。','接客はもう少し丁寧だとうれしいです。'],
+    '不満':['スタッフさんの接客には不満が残りました。','接客の対応は残念でした。']},
+  explain:{'参考になった':['お肉の焼き方を教えてもらえて、参考になりました。','焼き方の説明のおかげでおいしく焼けました。'],
+    '知ってた':['お肉の焼き方の説明もしてもらえました。','焼き方の案内もありました。'],
+    '参考にならなかった':['焼き方の説明はあまり参考になりませんでした。','焼き方の説明はもう少し工夫があるとうれしいです。']},
+  meat:{'とても満足':['お肉の質がとても良く、大満足でした。','お肉がとてもおいしかったです。'],'満足':['お肉もおいしかったです。','お肉の味に満足しました。'],
+    '普通':['お肉の味は普通でした。','お肉は普通においしかったです。'],'やや不満':['お肉の味は少し物足りなく感じました。','お肉の質は少し期待と違いました。'],
+    '不満':['お肉の味には満足できませんでした。','お肉の質は残念でした。']},
+  speed:{'ちょうどよい':['料理の提供もスムーズでした。','注文してからすぐに出てきました。'],'少し待った':['料理が出てくるまで少し待ちました。','提供まで少し時間がかかりました。'],
+    'かなり待った':['料理が出てくるまでかなり待ちました。','提供にはかなり時間がかかりました。']},
+  clean:{'とても良い':['店内は雰囲気が良く、清潔で居心地が良かったです。','店内がきれいで落ち着けました。'],'良い':['店内もきれいでした。','お店の雰囲気も良かったです。'],
+    '普通':['',''],'気になる点があった':['店内の清潔さで少し気になる点がありました。','お店の雰囲気や清潔さに少し気になるところがありました。']}
+};
+let hintVar=0;
+function makeHint(v){
+  const a=state.answers,pick=(k)=>(PHRASES[k][a[k]]||['',''])[v%2];
+  const parts=[];
+  parts.push(pick('meat'));
+  if(a.best) parts.push(['ごはん','サイドメニュー'].includes(a.best)?(v%2?`${a.best}も良かったです。`:`${a.best}もおいしかったです。`):(v%2?`${a.best}が特に良かったです。`:`特に${a.best}がおいしかったです。`));
+  parts.push(pick('service'));parts.push(pick('explain'));parts.push(pick('speed'));parts.push(pick('clean'));
+  if(state.stars>=4)parts.push(v%2?'ぜひまた行きたいです。':'また来たいと思います。');
+  return parts.filter(Boolean).join('');
+}
+function remakeHint(){hintVar++;document.getElementById('hint').value=makeHint(hintVar)}
+async function copyHint(b){const t=document.getElementById('hint').value;
+  try{await navigator.clipboard.writeText(t);b.textContent='コピーしました'}catch(e){const h=document.getElementById('hint');h.select();b.textContent='選択しました。長押しでコピー'}
+  setTimeout(()=>b.textContent='文章をコピー',2000)}
+
+
+buildSurvey();init();
+</script>
+</body>
+</html>
