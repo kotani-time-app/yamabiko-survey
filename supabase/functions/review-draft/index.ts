@@ -15,18 +15,20 @@ const LABELS: Record<string, string> = {
   clean: "店内の雰囲気・清潔さ",
   best: "一番美味しかったメニュー",
 };
-const STYLES = [
-  "短めでさっぱりした口調",
-  "丁寧で落ち着いた口調",
-  "友人に話すような親しみやすい口調",
-  "具体的なポイントを順に挙げる口調",
-  "感想を素直に書いた自然な口調",
+const STYLES: { name: string; desc: string }[] = [
+  { name: "熱烈", desc: "感動が抑えきれない、ややオーバーなテンション。「！」や大げさな比喩（例：とろける、箸が止まらない）を使ってよい" },
+  { name: "真面目", desc: "落ち着いた丁寧語のきちんとしたレビュー調。良かった点と気になった点を整理して書く" },
+  { name: "詩的", desc: "少し文学的で情緒のある表現。炭火や煙、余韻などの比喩を一つ二つ使い、短い文でリズムよく" },
+  { name: "チャラめ", desc: "ノリの軽いくだけた口調（例：マジで、ガチで、〜すぎた、最高かよ）。下品な言葉や悪口は使わない" },
+  { name: "食レポ", desc: "テレビの食レポ風。味や食感を五感で生き生きと描写する" },
+  { name: "関西弁", desc: "大阪のお客さんらしい親しみやすい関西弁（例：めっちゃ、ほんま、〜やった）" },
+  { name: "一言キレ味", desc: "短くキレのある文を2〜3つ並べる簡潔なレビュー。体言止めも使ってよい" },
 ];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method" }, 405);
-  let body: { id?: string; token?: string };
+  let body: { id?: string; token?: string; exclude?: string };
   try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
   const uuid = /^[0-9a-f-]{36}$/i;
   if (!body.id || !body.token || !uuid.test(body.id) || !uuid.test(body.token)) return json({ error: "bad input" }, 400);
@@ -47,30 +49,36 @@ Deno.serve(async (req) => {
 
   const answers = input.answers || {};
   const lines = Object.keys(LABELS).filter((k) => answers[k]).map((k) => `- ${LABELS[k]}：${answers[k]}`).join("\n");
-  const style = STYLES[Math.floor(Math.random() * STYLES.length)];
-  const prompt = `焼肉店「焼肉ホルモン やまびこ畜産 京橋店」に来店したお客様が、Googleクチコミを書くときの「たたき台」を作ってください。お客様はこの文章を自分で読み、自由に書き直してから投稿します。
+  const pool = STYLES.filter((x) => x.name !== body.exclude);
+  const style = pool[Math.floor(Math.random() * pool.length)];
+  const prompt = `焼肉店に来店したお客様が、Googleクチコミを書くときの「たたき台」を作ってください。お客様はこの文章を読み、自由に書き直してから自分で投稿します。
 
 お客様がアンケートで選んだ回答：
 総合満足度：5段階中${input.stars}
 ${lines}
 
-条件：
-- 回答に書かれている内容だけを使う。回答にない体験・人物・メニュー・値段・感情を付け足さない
-- 「普通」の項目は触れないか、さらっと触れる程度にする
-- 不満の回答があれば、角を立てずに正直に書く
-- お客様本人の一人称の感想として、${style}で書く
-- 日本語で80〜160文字。絵文字・ハッシュタグ・星の数・店名の連呼は使わない
-- 文章だけを出力する（前置きや説明は不要）`;
+テイスト：「${style.name}」
+${style.desc}
+
+ルール：
+- 事実は回答の内容だけ。回答にない事実は付け足さない（例：肉の厚さや部位の特徴、量、値段、初めて来た／常連、誰と来たか、焼肉デビュー、記念日など）
+- そのかわり「表現」は自由に脚色してよい。感想の強さや言い回し、比喩、テンションでテイストをはっきり出す
+- 全項目を順番に並べる必要はない。印象的な点を中心に組み立て、「普通」の項目は省いてよい
+- 不満の回答があれば、テイストを保ったまま正直に一言入れる（大げさに盛らない）
+- 満足度が低い場合は、褒めすぎず回答に合ったトーンにする
+- 日本語で60〜180文字。絵文字・ハッシュタグ・星の数は使わない。店名は書かない
+- 「食レポ風に言うと」のようにテイスト名や指示に触れない
+- 文章だけを出力する（前置き・説明・カギカッコ不要）`;
 
   const ai = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 2000, thinking: { type: "disabled" }, messages: [{ role: "user", content: prompt }] }),
+    body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 2000, temperature: 1, thinking: { type: "disabled" }, messages: [{ role: "user", content: prompt }] }),
   });
   if (!ai.ok) {
     const t = await ai.text();
     console.error("anthropic error", ai.status, t.slice(0, 500));
-    return json({ error: "ai failed", status: ai.status, detail: t.slice(0, 300) }, 502);
+    return json({ error: "ai failed", status: ai.status }, 502);
   }
   const out = await ai.json();
   const text = (out.content || []).filter((c: { type: string }) => c.type === "text").map((c: { text: string }) => c.text).join("").trim();
@@ -78,5 +86,5 @@ ${lines}
     console.error("empty", JSON.stringify(out).slice(0, 800));
     return json({ error: "empty", stop: out.stop_reason, types: (out.content || []).map((c: { type: string }) => c.type) }, 502);
   }
-  return json({ text, left: Math.max(0, 6 - input.n) });
+  return json({ text, style: style.name, left: Math.max(0, 6 - input.n) });
 });

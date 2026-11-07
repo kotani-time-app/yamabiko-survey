@@ -398,16 +398,16 @@ function makeHint(v){
   if(state.stars>=4)parts.push(v%2?'ぜひまた行きたいです。':'また来たいと思います。');
   return parts.filter(Boolean).join('');
 }
-let aiLeft=6,aiBusy=false;
+let aiLeft=6,aiBusy=false,aiStyle='';
 async function aiDraft(){
   const h=document.getElementById('hint'),st=document.getElementById('aiStatus');
   if(aiBusy||!state.res||aiLeft<=0)return false;
   aiBusy=true;st.textContent='AIが文章を作成中…';h.classList.add('loading');
   try{
-    const r=await fetch(SB_URL+'/functions/v1/review-draft',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({id:state.res.id,token:state.res.token})});
+    const r=await fetch(SB_URL+'/functions/v1/review-draft',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({id:state.res.id,token:state.res.token,exclude:aiStyle})});
     const j=await r.json().catch(()=>null);
     if(!r.ok||!j||!j.text){if(r.status===429)aiLeft=0;throw new Error('ai')}
-    aiLeft=j.left;h.value=j.text;st.textContent='';return true;
+    aiLeft=j.left;h.value=j.text;aiStyle=j.style||'';st.textContent=aiStyle?('テイスト：'+aiStyle+'（「作り直す」で別のテイストに）'):'';return true;
   }catch(e){st.textContent='';return false}
   finally{aiBusy=false;h.classList.remove('loading')}
 }
