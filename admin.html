@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>本社 管理画面｜やまびこ畜産 京橋店</title>
+<title>本社 管理画面｜やまびこ畜産</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -146,7 +146,7 @@ textarea{min-height:110px;resize:vertical}
 <div class="wrap">
 
   <div id="login">
-    <div class="hero"><div class="shop">やまびこ畜産 京橋店</div><h1 style="font-size:22px">本社 管理画面</h1></div>
+    <div class="hero"><div class="shop">焼肉ホルモン やまびこ畜産</div><h1 style="font-size:22px">本社 管理画面</h1></div>
     <div class="card">
       <div class="section-title">パスワード</div>
       <input type="password" id="pw" style="width:100%;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:16px;margin-top:10px" onkeydown="if(event.key==='Enter')login()">
@@ -161,6 +161,7 @@ textarea{min-height:110px;resize:vertical}
       <h1 style="font-size:20px">アンケート一覧</h1>
       <p class="small">すべての回答が届きます。☆3以下は「要確認」として表示します。</p><div class="filters" id="period" style="margin-top:10px"><button data-d="1" onclick="setDays(1,this)">今日</button><button data-d="7" onclick="setDays(7,this)">7日間</button><button class="on" data-d="31" onclick="setDays(31,this)">31日間</button><button data-d="366" onclick="setDays(366,this)">1年</button></div>
     </div>
+    <div class="filters" id="storeTabs" style="margin-top:4px"></div>
     <div class="stats" style="grid-template-columns:repeat(4,1fr)">
       <div class="stat"><b id="stCount">0</b><span>回答数</span></div>
       <div class="stat"><b id="stAvg">-</b><span>平均☆</span></div>
@@ -186,6 +187,7 @@ textarea{min-height:110px;resize:vertical}
 
     <div class="card">
       <div class="section-title">ガチャ景品と確率</div>
+      <div class="filters" id="prizeStoreTabs" style="margin:8px 0"></div>
       <p class="small">合計が100%になるように設定し、「保存」を押してください。</p>
       <table class="prizeTable" id="prizeTable"></table>
       <div class="err" id="prizeErr" style="text-align:left"></div>
@@ -219,10 +221,11 @@ const QUESTIONS=[
   {id:'clean',q:'店内の雰囲気、清潔さは？',opts:['とても良い','良い','普通','気になる点があった']},
   {id:'best',q:'一番美味しかったメニューは？',opts:['タン','ハラミ','ロース','カルビ','ごはん','肉吸い','サイドメニュー']}
 ];
-let PW='',records=[],prizes=[],filter='all',days=31;
+let PW='',records=[],prizes=[],stores=[],filter='all',days=31,storeSel='all',prizeStore='kyobashi';
+const storeName=id=>(stores.find(x=>x.id===id)||{}).name||id;
 function fmt(t){const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`}
 async function load(){
-  const j=await rpc('admin_list',{p_password:PW,p_days:days});records=j.responses||[];prizes=j.prizes||[];renderHq();
+  const j=await rpc('admin_list',{p_password:PW,p_days:days});records=j.responses||[];prizes=j.prizes||[];stores=j.stores||[];renderHq();
 }
 async function login(){
   const b=document.getElementById('loginBtn'),e=document.getElementById('loginErr');PW=document.getElementById('pw').value;
@@ -235,8 +238,17 @@ async function login(){
 function logout(){try{sessionStorage.removeItem('ymb_pw')}catch(x){}location.reload()}
 function setFilter(f,b){filter=f;document.querySelectorAll('#hq > .filters button').forEach(x=>x.classList.toggle('on',x===b));renderHq()}
 async function setDays(d,b){days=d;document.querySelectorAll('#period button').forEach(x=>x.classList.toggle('on',x===b));await load()}
+function renderStoreTabs(){
+  const mk=(id,label,cur,fn)=>`<button class="${cur===id?'on':''}" onclick="${fn}('${id}')">${label}</button>`;
+  document.getElementById('storeTabs').innerHTML=mk('all','全店',storeSel,'setStore')+stores.map(x=>mk(x.id,x.name,storeSel,'setStore')).join('');
+  document.getElementById('prizeStoreTabs').innerHTML=stores.map(x=>mk(x.id,x.name,prizeStore,'setPrizeStore')).join('');
+}
+function setStore(id){storeSel=id;renderHq()}
+function setPrizeStore(id){prizeStore=id;renderStoreTabs();renderPrizes()}
 function renderHq(){
-  const real=records.filter(r=>!r.test),tests=records.filter(r=>r.test);
+  renderStoreTabs();
+  const inStore=records.filter(r=>storeSel==='all'||r.store===storeSel);
+  const real=inStore.filter(r=>!r.test),tests=inStore.filter(r=>r.test);
   document.getElementById('stCount').textContent=real.length;
   document.getElementById('stAvg').textContent=real.length?(real.reduce((a,r)=>a+r.stars,0)/real.length).toFixed(1):'-';
   document.getElementById('stAlert').textContent=real.filter(r=>r.stars<=3).length;
@@ -252,7 +264,7 @@ function renderHq(){
     const dl=QUESTIONS.map(q=>`<dt>${q.q.replace(/[？?]$/,'').slice(0,12)}</dt><dd>${esc((r.answers||{})[q.id]||'-')}</dd>`).join('');
     return `<div class="rec ${alert?'alert':''}">
       <div class="head"><div><span class="st">${'★'.repeat(r.stars)}<span style="color:#5a4a3e">${'★'.repeat(5-r.stars)}</span></span>
-      <div class="meta">${fmt(r.time)} ／ ガチャ：${esc(r.prize)}${r.lose?'':(r.redeemed?'（引換済）':'（未引換）')}</div></div>${r.test?'<span class="tbadge">テスト</span>':(alert?'<span class="flag">要確認</span>':'')}</div>
+      <div class="meta">${fmt(r.time)} ／ ${esc(storeName(r.store))} ／ ガチャ：${esc(r.prize)}${r.lose?'':(r.redeemed?'（引換済）':'（未引換）')}</div></div>${r.test?'<span class="tbadge">テスト</span>':(alert?'<span class="flag">要確認</span>':'')}</div>
       <dl>${dl}</dl>
       ${r.msg?`<div class="msg">${esc(r.msg)}${r.contact?'<br><span class="meta">連絡先：'+esc(r.contact)+'</span>':''}</div>`:''}
       <div class="acts"><button onclick="setTest('${r.id}',${!r.test},this)">${r.test?'本番に戻す':'テストにする'}</button><button class="danger" onclick="delOne('${r.id}',this)">削除</button></div>
@@ -275,16 +287,16 @@ async function toggleTest(){
   renderTestState()}
 function renderPrizes(){
   const t=document.getElementById('prizeTable');
-  t.innerHTML=prizes.map((p,i)=>`<tr><td>${p.icon||'—'} ${esc(p.name)}</td><td style="text-align:right"><input type="number" min="0" max="100" value="${p.rate}" oninput="prizes[${i}].rate=Math.max(0,Number(this.value)||0);checkRates()"> %</td></tr>`).join('')+
+  t.innerHTML=prizes.map((p,i)=>p.store!==prizeStore?'':`<tr><td>${p.icon||'—'} ${esc(p.name)}</td><td style="text-align:right"><input type="number" min="0" max="100" value="${p.rate}" oninput="prizes[${i}].rate=Math.max(0,Number(this.value)||0);checkRates()"> %</td></tr>`).join('')+
     `<tr><td><b>合計</b></td><td style="text-align:right"><b id="rateSum"></b></td></tr>`;
   checkRates();
 }
-function checkRates(){const s=prizes.reduce((a,p)=>a+Number(p.rate),0);document.getElementById('rateSum').textContent=s+' %';
+function checkRates(){const s=prizes.filter(p=>p.store===prizeStore).reduce((a,p)=>a+Number(p.rate),0);document.getElementById('rateSum').textContent=s+' %';
   const e=document.getElementById('prizeErr');e.style.color='';e.textContent=s===100?'':'合計が100%になっていません（このままでも比率で抽選されます）'}
 async function saveRates(){
   const b=document.getElementById('saveRates'),e=document.getElementById('prizeErr');b.disabled=true;b.textContent='保存中…';
-  const m={};prizes.forEach(p=>m[p.id]=p.rate);
-  try{await rpc('admin_set_rates',{p_password:PW,p_rates:m});await load();e.style.color='var(--green)';e.textContent='保存しました'}
+  const m={};prizes.filter(p=>p.store===prizeStore).forEach(p=>m[p.id]=p.rate);
+  try{await rpc('admin_set_rates',{p_password:PW,p_rates:m});await load();e.style.color='var(--green)';e.textContent=storeName(prizeStore)+'の確率を保存しました'}
   catch(x){e.style.color='';e.textContent='保存できませんでした'}finally{b.disabled=false;b.textContent='保存'}
 }
 async function changePw(){

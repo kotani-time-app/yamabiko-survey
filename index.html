@@ -147,7 +147,7 @@ textarea.loading{opacity:.5}
 
     <section class="screen on" id="s-top">
       <div class="hero">
-        <div class="shop">やまびこ畜産 京橋店</div>
+        <div class="shop" id="shopName">やまびこ畜産 京橋店</div>
         <h1>アンケートに答えて<br><em>ガチャ</em>に挑戦！</h1>
         <p class="lead">7問・約30秒で終わります。<br>シャーベットやアイスクリームが当たるかも（ハズレもあります）<br><span style="font-size:12px">※ガチャはお一人様1日1回まで</span></p>
       </div>
@@ -227,7 +227,7 @@ textarea.loading{opacity:.5}
         <p class="small" id="aiStatus" style="margin-top:6px;color:var(--ember2);min-height:1em"></p>
         <textarea id="hint"></textarea>
         <div class="copyrow"><button onclick="copyHint(this)">文章をコピー</button><button onclick="remakeHint()">作り直す</button></div>
-        <a class="gbtn" href="https://search.google.com/local/writereview?placeid=ChIJGyddMczhAGARJlugzY6oG1s" target="_blank" rel="noopener">
+        <a class="gbtn" id="gLink" href="https://search.google.com/local/writereview?placeid=ChIJGyddMczhAGARJlugzY6oG1s" target="_blank" rel="noopener">
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2.1 5-4.4 6.6v5.5h7.1c4.2-3.9 6.5-9.6 6.5-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.6-3.9-12.3-9.1H4.4v5.7C8 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.7 28.2c-.4-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.4C2.9 17.1 2 20.4 2 24s.9 6.9 2.4 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8 6.9 4.4 14.1l7.3 5.7c1.7-5.2 6.6-9.1 12.3-9.1z"/></svg>
           Googleでクチコミを書く
         </a>
@@ -265,6 +265,16 @@ function deviceId(){
   if(!id){id=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)));try{localStorage.setItem('ymb_device',id)}catch(e){}}
   return id;
 }
+const STORES={
+  kyobashi:{name:'やまびこ畜産 京橋店',place:'ChIJGyddMczhAGARJlugzY6oG1s',full:'焼肉ホルモン やまびこ畜産 京橋店'},
+  fuse:{name:'やまびこ畜産 布施駅前店',place:'',map:'https://maps.app.goo.gl/5QseAxN9YGQBENjH8',full:'焼肉ホルモン やまびこ畜産 布施駅前店'}
+};
+const STORE_ID=(()=>{const q=new URLSearchParams(location.search).get('s');return STORES[q]?q:'kyobashi'})();
+const STORE=STORES[STORE_ID];
+document.title=STORE.name+' アンケート';
+document.getElementById('shopName').textContent=STORE.name;
+document.getElementById('gLink').href=STORE.place?('https://search.google.com/local/writereview?placeid='+STORE.place):(STORE.map||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(STORE.full)));
+if(!STORE.place){const n=document.getElementById('gLink').nextElementSibling;if(n)n.textContent='※Googleマップの店舗ページが開きます。「クチコミ」から投稿できます'}
 const DEVICE=deviceId();
 let TEST_KEY=null;try{TEST_KEY=localStorage.getItem('ymb_test_key')}catch(e){}
 function nextReset(){const n=new Date();const r=new Date(n);r.setHours(8,0,0,0);if(n>=r)r.setDate(r.getDate()+1);return `${r.getMonth()+1}/${r.getDate()} 朝8時`}
@@ -272,7 +282,7 @@ function nextReset(){const n=new Date();const r=new Date(n);r.setHours(8,0,0,0);
 async function init(){
   const btn=document.getElementById('startBtn');
   if(TEST_KEY){const b=document.getElementById('testBanner');b.style.display='block'}
-  else{try{today=await rpc('get_today',{p_device:DEVICE})}catch(e){today=null}}
+  else{try{today=await rpc('get_today',{p_device:DEVICE,p_store:STORE_ID})}catch(e){today=null}}
   btn.disabled=false;btn.textContent='はじめる';renderTop();
 }
 function ticketHtml(p,note){
@@ -316,7 +326,7 @@ async function submitSurvey(){
   if(missing){err.textContent=`未回答の質問が${missing}つあります`;return}
   btn.disabled=true;btn.textContent='送信中…';
   try{
-    const args={p_device:DEVICE,p_stars:state.stars,p_answers:state.answers};if(TEST_KEY)args.p_test_key=TEST_KEY;
+    const args={p_device:DEVICE,p_stars:state.stars,p_answers:state.answers,p_store:STORE_ID};if(TEST_KEY)args.p_test_key=TEST_KEY;
     const res=await rpc('submit_survey',args);
     if(res.already){today=res;go('s-top');renderTop();return}
     state.res=res;go('s-gacha');
@@ -369,7 +379,7 @@ let usedArm=false;
 async function markUsed(b){
   if(!usedArm){usedArm=true;b.textContent='もう一度タップで引換確定';setTimeout(()=>{if(usedArm&&!b.disabled){usedArm=false;b.textContent='スタッフ用：引換済みにする'}},4000);return}
   usedArm=false;b.disabled=true;b.textContent='処理中…';
-  try{await rpc('redeem',{p_device:DEVICE});b.textContent='引換済み';b.classList.add('done');if(today)today.redeemed=true}
+  try{await rpc('redeem',{p_device:DEVICE,p_store:STORE_ID});b.textContent='引換済み';b.classList.add('done');if(today)today.redeemed=true}
   catch(e){b.disabled=false;b.textContent='通信エラー。もう一度タップ'}
 }
 async function sendHq(){
