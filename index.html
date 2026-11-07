@@ -139,6 +139,20 @@ textarea.loading{opacity:.5}
 </style>
 </head>
 <body>
+<div id="gModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:80;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#2a221d;border:1px solid #4a3c32;border-radius:18px;padding:20px;max-width:400px;width:100%;color:#f6efe7">
+    <div id="gmTitle" style="font-size:18px;font-weight:900;text-align:center">✅ 文章をコピーしました</div>
+    <ol style="margin:14px 0 0 1.3em;font-size:14px;line-height:1.9">
+      <li>次の画面で☆を選ぶ</li>
+      <li>入力欄を<b>長押し</b>して「<b>貼り付け</b>」</li>
+      <li>自由に書き直して「投稿」</li>
+    </ol>
+    <textarea id="gmText" style="display:none;min-height:90px" readonly></textarea>
+    <p class="small" style="margin-top:10px">戻りたいときは、この画面をもう一度開けば文章が残っています。</p>
+    <a id="gmGo" class="gbtn" target="_blank" rel="noopener" onclick="closeG()">Googleを開く</a>
+    <button onclick="closeG()" style="width:100%;margin-top:10px;padding:10px;border-radius:12px;background:#352b24;color:#f6efe7;font-weight:700;font-family:inherit">やめる</button>
+  </div>
+</div>
 <div class="wrap">
   <div id="testBanner" style="display:none;background:#1d3f80;color:#dbe8ff;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.6;margin-bottom:10px">🧪 <b>テストモード</b>：1日1回の制限なし。回答は本社画面で「テスト」として記録されます。<br><button onclick="restartTest()" style="margin-top:6px;padding:6px 12px;border-radius:8px;background:#fff;color:#1d3f80;font-weight:700;font-family:inherit">最初からもう一度</button></div>
 
@@ -225,13 +239,13 @@ textarea.loading{opacity:.5}
         <p class="small">任意です。ガチャや景品とは関係ありません。</p>
         <p class="small" style="margin-top:8px">選んだ回答をもとに文章のたたき台を作りました。ご自身の言葉に自由に書き直してお使いください。</p>
         <p class="small" id="aiStatus" style="margin-top:6px;color:var(--ember2);min-height:1em"></p>
-        <textarea id="hint"></textarea>
+        <textarea id="hint" oninput="saveDraft(this.value)"></textarea>
         <div class="copyrow"><button onclick="copyHint(this)">文章をコピー</button><button onclick="remakeHint()">作り直す</button></div>
-        <a class="gbtn" id="gLink" href="https://search.google.com/local/writereview?placeid=ChIJGyddMczhAGARJlugzY6oG1s" target="_blank" rel="noopener">
+        <a class="gbtn" id="gLink" href="https://search.google.com/local/writereview?placeid=ChIJGyddMczhAGARJlugzY6oG1s" target="_blank" rel="noopener" onclick="goGoogle(event,'hint')">
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2.1 5-4.4 6.6v5.5h7.1c4.2-3.9 6.5-9.6 6.5-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.6-3.9-12.3-9.1H4.4v5.7C8 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.7 28.2c-.4-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.4C2.9 17.1 2 20.4 2 24s.9 6.9 2.4 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8 6.9 4.4 14.1l7.3 5.7c1.7-5.2 6.6-9.1 12.3-9.1z"/></svg>
-          Googleでクチコミを書く
+          文章をコピーしてGoogleへ
         </a>
-        <p class="small" style="margin-top:8px;text-align:center">※Googleのクチコミ投稿画面が開きます</p>
+        <p class="small" id="gNote" style="margin-top:8px;text-align:center">※文章は自動でコピーされます</p>
       </div>
       
     </section>
@@ -274,7 +288,8 @@ const STORE=STORES[STORE_ID];
 document.title=STORE.name+' アンケート';
 document.getElementById('shopName').textContent=STORE.name;
 document.getElementById('gLink').href=STORE.place?('https://search.google.com/local/writereview?placeid='+STORE.place):(STORE.map||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(STORE.full)));
-if(!STORE.place){const n=document.getElementById('gLink').nextElementSibling;if(n)n.textContent='※Googleマップの店舗ページが開きます。「クチコミ」から投稿できます'}
+const G_URL=document.getElementById('gLink').href;
+if(!STORE.place){document.getElementById('gNote').textContent='※文章は自動でコピーされます。Googleマップの店舗ページの「クチコミ」から投稿できます'}
 const DEVICE=deviceId();
 let TEST_KEY=null;try{TEST_KEY=localStorage.getItem('ymb_test_key')}catch(e){}
 function nextReset(){const n=new Date();const r=new Date(n);r.setHours(8,0,0,0);if(n>=r)r.setDate(r.getDate()+1);return `${r.getMonth()+1}/${r.getDate()} 朝8時`}
@@ -296,6 +311,10 @@ function renderTop(){
   box.innerHTML=`<div class="big">🎰</div><div class="section-title" style="margin-top:8px">本日のガチャは参加済みです</div>
     <p class="small">ご協力ありがとうございました。次回は ${nextReset()} 以降に参加できます。</p>`+
     (p.lose?'':ticketHtml(p,'本日の当たり：'+esc(p.prize)+'　スタッフにお見せください'));
+  const d=loadDraft();
+  if(d){box.innerHTML+=`<div style="text-align:left;margin-top:16px"><div class="section-title">クチコミの文章（下書き）</div>
+    <textarea id="hint2" oninput="saveDraft(this.value)">${esc(d)}</textarea>
+    <a class="gbtn" href="#" onclick="goGoogle(event,'hint2')">文章をコピーしてGoogleへ</a></div>`}
 }
 function startSurvey(){if(today){renderTop();return}go('s-q')}
 
@@ -371,7 +390,7 @@ function showResult(){
     box.innerHTML=`<div class="big">${esc(p.icon)}</div><h2 class="win">当たり！</h2><p class="lead" style="margin-top:4px;font-size:18px;color:var(--ink);font-weight:900">${esc(p.prize)}</p>`+ticketHtml(p,'スタッフにこの画面をお見せください');
   }
   document.getElementById('hqBox').style.display=state.stars<=3?'block':'none';
-  document.getElementById('hint').value=makeHint(0);
+  document.getElementById('hint').value=makeHint(0);saveDraft(document.getElementById('hint').value);
   go('s-result');
   aiDraft();
 }
@@ -429,7 +448,7 @@ async function aiDraft(){
     const r=await fetch(SB_URL+'/functions/v1/review-draft',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({id:state.res.id,token:state.res.token,exclude:aiStyle})});
     const j=await r.json().catch(()=>null);
     if(!r.ok||!j||!j.text){if(r.status===429)aiLeft=0;throw new Error('ai')}
-    aiLeft=j.left;h.value=j.text;aiStyle=j.style||'';st.textContent=aiStyle?('テイスト：'+aiStyle+'（「作り直す」で別のテイストに）'):'';return true;
+    aiLeft=j.left;h.value=j.text;saveDraft(j.text);aiStyle=j.style||'';st.textContent=aiStyle?('テイスト：'+aiStyle+'（「作り直す」で別のテイストに）'):'';return true;
   }catch(e){st.textContent='';return false}
   finally{aiBusy=false;h.classList.remove('loading')}
 }
@@ -437,6 +456,23 @@ async function remakeHint(){
   if(await aiDraft())return;
   hintVar++;document.getElementById('hint').value=makeHint(hintVar);
 }
+function bizDayLocal(){const d=new Date(Date.now()-8*3600e3);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function saveDraft(t){try{localStorage.setItem('ymb_draft_'+STORE_ID,JSON.stringify({day:bizDayLocal(),text:t}))}catch(e){}}
+function loadDraft(){try{const v=JSON.parse(localStorage.getItem('ymb_draft_'+STORE_ID)||'null');if(v&&v.day===bizDayLocal())return v.text}catch(e){}return ''}
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);return true}catch(e){}
+  try{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(e){return false}
+}
+async function goGoogle(e,id){
+  e.preventDefault();
+  const t=document.getElementById(id).value.trim();saveDraft(t);
+  const ok=t?await copyText(t):false;
+  document.getElementById('gmTitle').textContent=ok?'✅ 文章をコピーしました':'下の文章を長押ししてコピーしてください';
+  const gt=document.getElementById('gmText');gt.style.display=ok?'none':'block';gt.value=t;
+  document.getElementById('gmGo').href=G_URL;
+  document.getElementById('gModal').style.display='flex';
+}
+function closeG(){setTimeout(()=>document.getElementById('gModal').style.display='none',50)}
 async function copyHint(b){const t=document.getElementById('hint').value;
   try{await navigator.clipboard.writeText(t);b.textContent='コピーしました'}catch(e){const h=document.getElementById('hint');h.select();b.textContent='選択しました。長押しでコピー'}
   setTimeout(()=>b.textContent='文章をコピー',2000)}
