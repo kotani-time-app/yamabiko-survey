@@ -140,6 +140,7 @@ textarea.loading{opacity:.5}
 </head>
 <body>
 <div class="wrap">
+  <div id="testBanner" style="display:none;background:#1d3f80;color:#dbe8ff;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.6;margin-bottom:10px">🧪 <b>テストモード</b>：1日1回の制限なし。回答は本社画面で「テスト」として記録されます。<br><button onclick="restartTest()" style="margin-top:6px;padding:6px 12px;border-radius:8px;background:#fff;color:#1d3f80;font-weight:700;font-family:inherit">最初からもう一度</button></div>
 
   <!-- ===== GUEST ===== -->
   <div id="guest">
@@ -265,11 +266,13 @@ function deviceId(){
   return id;
 }
 const DEVICE=deviceId();
+let TEST_KEY=null;try{TEST_KEY=localStorage.getItem('ymb_test_key')}catch(e){}
 function nextReset(){const n=new Date();const r=new Date(n);r.setHours(8,0,0,0);if(n>=r)r.setDate(r.getDate()+1);return `${r.getMonth()+1}/${r.getDate()} 朝8時`}
 
 async function init(){
   const btn=document.getElementById('startBtn');
-  try{today=await rpc('get_today',{p_device:DEVICE})}catch(e){today=null}
+  if(TEST_KEY){const b=document.getElementById('testBanner');b.style.display='block'}
+  else{try{today=await rpc('get_today',{p_device:DEVICE})}catch(e){today=null}}
   btn.disabled=false;btn.textContent='はじめる';renderTop();
 }
 function ticketHtml(p,note){
@@ -313,7 +316,8 @@ async function submitSurvey(){
   if(missing){err.textContent=`未回答の質問が${missing}つあります`;return}
   btn.disabled=true;btn.textContent='送信中…';
   try{
-    const res=await rpc('submit_survey',{p_device:DEVICE,p_stars:state.stars,p_answers:state.answers});
+    const args={p_device:DEVICE,p_stars:state.stars,p_answers:state.answers};if(TEST_KEY)args.p_test_key=TEST_KEY;
+    const res=await rpc('submit_survey',args);
     if(res.already){today=res;go('s-top');renderTop();return}
     state.res=res;go('s-gacha');
   }catch(e){err.textContent='送信できませんでした。電波の良い場所でもう一度お試しください。'}
@@ -321,6 +325,14 @@ async function submitSurvey(){
 }
 
 let spinning=false,spun=false;
+function restartTest(){
+  state={stars:0,answers:{},res:null};spinning=false;spun=false;hintVar=0;aiLeft=6;aiStyle='';today=null;
+  document.getElementById('handle').classList.remove('turn');document.getElementById('balls').classList.remove('shake');
+  document.getElementById('capsule').className='capsule';document.getElementById('gachaHint').textContent='▲ ハンドルをタップ';
+  ['hqMsg','hqContact'].forEach(i=>document.getElementById(i).value='');
+  const hs=document.getElementById('hqSend');hs.style.display='block';hs.disabled=false;hs.textContent='本社に送る';document.getElementById('hqSent').style.display='none';
+  usedArm=false;buildSurvey();renderTop();go('s-top');
+}
 function spin(){
   if(spinning||spun||!state.res)return;spinning=true;spun=true;
   const p=state.res,hint=document.getElementById('gachaHint'),m=document.getElementById('machine');

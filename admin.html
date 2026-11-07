@@ -116,7 +116,11 @@ textarea{min-height:110px;resize:vertical}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
 .stat b{display:block;font-size:22px;font-weight:900}
 .stat span{font-size:11px;color:var(--mute)}
-.filters{display:flex;gap:6px;margin:16px 0 8px}
+.filters{display:flex;gap:6px;margin:16px 0 8px;flex-wrap:wrap}
+.tbadge{font-size:11px;background:#6aa8ff;color:#0b1a33;padding:2px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.acts{display:flex;gap:8px;margin-top:10px}
+.acts button{flex:1;padding:8px;border-radius:10px;background:var(--panel2);color:var(--ink);font-size:12px;font-weight:700}
+.acts button.danger{color:#ff9a8f}
 .filters button{padding:7px 12px;border-radius:99px;background:var(--panel2);color:var(--mute);font-size:13px;font-weight:700}
 .filters button.on{background:var(--ember);color:#2a1306}
 .rec{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:8px}
@@ -167,8 +171,18 @@ textarea{min-height:110px;resize:vertical}
       <button class="on" data-f="all" onclick="setFilter('all',this)">すべて</button>
       <button data-f="alert" onclick="setFilter('alert',this)">要確認（☆3以下）</button>
       <button data-f="good" onclick="setFilter('good',this)">☆4以上</button>
+      <button data-f="test" onclick="setFilter('test',this)">テスト<span id="testCount"></span></button>
     </div>
+    <p class="small" id="filterNote" style="margin-bottom:4px">集計と一覧はテスト回答を除いています。</p>
+    <button class="btn sub" id="delTestsBtn" style="display:none;margin-top:8px" onclick="delTests(this)">テスト回答をすべて削除</button>
     <div id="recs"></div>
+
+    <div class="card">
+      <div class="section-title">テスト用スマホ</div>
+      <p class="small">スタッフが動作確認するスマホで、この画面を開いてオンにしてください。そのスマホでは1日1回の制限がなくなり、回答は「テスト」として本番と分けて記録されます（当たりのチケットにも「TEST」と表示）。</p>
+      <p class="small" id="testState" style="margin-top:8px;font-weight:700"></p>
+      <button class="btn sub" id="testBtn" onclick="toggleTest()"></button>
+    </div>
 
     <div class="card">
       <div class="section-title">ガチャ景品と確率</div>
@@ -214,7 +228,7 @@ async function login(){
   const b=document.getElementById('loginBtn'),e=document.getElementById('loginErr');PW=document.getElementById('pw').value;
   b.disabled=true;b.textContent='確認中…';e.textContent='';
   try{await load();try{sessionStorage.setItem('ymb_pw',PW)}catch(x){}
-    document.getElementById('login').style.display='none';document.getElementById('hq').style.display='block'}
+    document.getElementById('login').style.display='none';document.getElementById('hq').style.display='block';renderTestState()}
   catch(x){e.textContent=x.message==='unauthorized'?'パスワードが違います':'接続できませんでした'}
   finally{b.disabled=false;b.textContent='ログイン'}
 }
@@ -222,11 +236,15 @@ function logout(){try{sessionStorage.removeItem('ymb_pw')}catch(x){}location.rel
 function setFilter(f,b){filter=f;document.querySelectorAll('#hq > .filters button').forEach(x=>x.classList.toggle('on',x===b));renderHq()}
 async function setDays(d,b){days=d;document.querySelectorAll('#period button').forEach(x=>x.classList.toggle('on',x===b));await load()}
 function renderHq(){
-  document.getElementById('stCount').textContent=records.length;
-  document.getElementById('stAvg').textContent=records.length?(records.reduce((a,r)=>a+r.stars,0)/records.length).toFixed(1):'-';
-  document.getElementById('stAlert').textContent=records.filter(r=>r.stars<=3).length;
-  document.getElementById('stWin').textContent=records.filter(r=>!r.lose).length;
-  const list=records.filter(r=>filter==='all'||(filter==='alert'?r.stars<=3:r.stars>=4));
+  const real=records.filter(r=>!r.test),tests=records.filter(r=>r.test);
+  document.getElementById('stCount').textContent=real.length;
+  document.getElementById('stAvg').textContent=real.length?(real.reduce((a,r)=>a+r.stars,0)/real.length).toFixed(1):'-';
+  document.getElementById('stAlert').textContent=real.filter(r=>r.stars<=3).length;
+  document.getElementById('stWin').textContent=real.filter(r=>!r.lose).length;
+  document.getElementById('testCount').textContent=tests.length?'（'+tests.length+'）':'';
+  document.getElementById('delTestsBtn').style.display=filter==='test'&&tests.length?'block':'none';
+  document.getElementById('filterNote').textContent=filter==='test'?'テスト回答だけを表示しています。集計には含まれません。':'集計と一覧はテスト回答を除いています。';
+  const list=filter==='test'?tests:real.filter(r=>filter==='all'||(filter==='alert'?r.stars<=3:r.stars>=4));
   const box=document.getElementById('recs');
   if(!list.length){box.innerHTML='<p class="small" style="text-align:center;padding:20px">該当する回答はありません</p>';}
   else box.innerHTML=list.map(r=>{
@@ -234,12 +252,27 @@ function renderHq(){
     const dl=QUESTIONS.map(q=>`<dt>${q.q.replace(/[？?]$/,'').slice(0,12)}</dt><dd>${esc((r.answers||{})[q.id]||'-')}</dd>`).join('');
     return `<div class="rec ${alert?'alert':''}">
       <div class="head"><div><span class="st">${'★'.repeat(r.stars)}<span style="color:#5a4a3e">${'★'.repeat(5-r.stars)}</span></span>
-      <div class="meta">${fmt(r.time)} ／ ガチャ：${esc(r.prize)}${r.lose?'':(r.redeemed?'（引換済）':'（未引換）')}</div></div>${alert?'<span class="flag">要確認</span>':''}</div>
+      <div class="meta">${fmt(r.time)} ／ ガチャ：${esc(r.prize)}${r.lose?'':(r.redeemed?'（引換済）':'（未引換）')}</div></div>${r.test?'<span class="tbadge">テスト</span>':(alert?'<span class="flag">要確認</span>':'')}</div>
       <dl>${dl}</dl>
       ${r.msg?`<div class="msg">${esc(r.msg)}${r.contact?'<br><span class="meta">連絡先：'+esc(r.contact)+'</span>':''}</div>`:''}
+      <div class="acts"><button onclick="setTest('${r.id}',${!r.test},this)">${r.test?'本番に戻す':'テストにする'}</button><button class="danger" onclick="delOne('${r.id}',this)">削除</button></div>
     </div>`}).join('');
   renderPrizes();
 }
+function armed(b,label){if(b.dataset.arm){return true}b.dataset.arm='1';const o=b.textContent;b.textContent=label;setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent=o}},4000);return false}
+async function setTest(id,v,b){b.disabled=true;try{await rpc('admin_set_test',{p_password:PW,p_ids:[id],p_test:v});await load()}catch(x){b.disabled=false;b.textContent='エラー'}}
+async function delOne(id,b){if(!armed(b,'もう一度押すと削除'))return;b.disabled=true;try{await rpc('admin_delete',{p_password:PW,p_ids:[id]});await load()}catch(x){b.disabled=false;b.textContent='エラー'}}
+async function delTests(b){if(!armed(b,'もう一度押すと全テスト回答を削除'))return;b.disabled=true;try{await rpc('admin_delete_tests',{p_password:PW});delete b.dataset.arm;b.textContent='テスト回答をすべて削除';await load()}catch(x){b.textContent='エラー'}finally{b.disabled=false}}
+function testKeyLocal(){try{return localStorage.getItem('ymb_test_key')}catch(x){return null}}
+function renderTestState(){const on=!!testKeyLocal();
+  document.getElementById('testState').textContent=on?'このスマホはテスト用になっています':'このスマホは通常モード（お客様と同じ）です';
+  document.getElementById('testState').style.color=on?'#6aa8ff':'';
+  document.getElementById('testBtn').textContent=on?'テスト用を解除する':'このスマホをテスト用にする'}
+async function toggleTest(){
+  const b=document.getElementById('testBtn');
+  if(testKeyLocal()){try{localStorage.removeItem('ymb_test_key')}catch(x){}renderTestState();return}
+  b.disabled=true;try{const k=await rpc('admin_test_key',{p_password:PW});localStorage.setItem('ymb_test_key',k)}catch(x){b.textContent='設定できませんでした'}finally{b.disabled=false}
+  renderTestState()}
 function renderPrizes(){
   const t=document.getElementById('prizeTable');
   t.innerHTML=prizes.map((p,i)=>`<tr><td>${p.icon||'—'} ${esc(p.name)}</td><td style="text-align:right"><input type="number" min="0" max="100" value="${p.rate}" oninput="prizes[${i}].rate=Math.max(0,Number(this.value)||0);checkRates()"> %</td></tr>`).join('')+
