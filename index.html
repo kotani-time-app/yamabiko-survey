@@ -102,6 +102,7 @@ h1 em{font-style:normal;color:var(--gold)}
 .small{font-size:12px;color:var(--mute);line-height:1.7}
 textarea,input[type=text]{width:100%;background:#1f1915;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:15px;line-height:1.7;margin-top:10px}
 textarea{min-height:110px;resize:vertical}
+textarea.loading{opacity:.5}
 .hq{border-color:#7a4a30;background:linear-gradient(180deg,#3a271c,var(--panel))}
 .sent{color:var(--green);font-size:14px;font-weight:700;margin-top:10px;text-align:center}
 .google{border-color:var(--line)}
@@ -222,6 +223,7 @@ textarea{min-height:110px;resize:vertical}
         <div class="section-title">よろしければGoogleでも感想をお聞かせください</div>
         <p class="small">任意です。ガチャや景品とは関係ありません。</p>
         <p class="small" style="margin-top:8px">選んだ回答をもとに文章のたたき台を作りました。ご自身の言葉に自由に書き直してお使いください。</p>
+        <p class="small" id="aiStatus" style="margin-top:6px;color:var(--ember2);min-height:1em"></p>
         <textarea id="hint"></textarea>
         <div class="copyrow"><button onclick="copyHint(this)">文章をコピー</button><button onclick="remakeHint()">作り直す</button></div>
         <a class="gbtn" href="https://search.google.com/local/writereview?placeid=ChIJGyddMczhAGARJlugzY6oG1s" target="_blank" rel="noopener">
@@ -349,6 +351,7 @@ function showResult(){
   document.getElementById('hqBox').style.display=state.stars<=3?'block':'none';
   document.getElementById('hint').value=makeHint(0);
   go('s-result');
+  aiDraft();
 }
 let usedArm=false;
 async function markUsed(b){
@@ -395,7 +398,23 @@ function makeHint(v){
   if(state.stars>=4)parts.push(v%2?'ぜひまた行きたいです。':'また来たいと思います。');
   return parts.filter(Boolean).join('');
 }
-function remakeHint(){hintVar++;document.getElementById('hint').value=makeHint(hintVar)}
+let aiLeft=6,aiBusy=false;
+async function aiDraft(){
+  const h=document.getElementById('hint'),st=document.getElementById('aiStatus');
+  if(aiBusy||!state.res||aiLeft<=0)return false;
+  aiBusy=true;st.textContent='AIが文章を作成中…';h.classList.add('loading');
+  try{
+    const r=await fetch(SB_URL+'/functions/v1/review-draft',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({id:state.res.id,token:state.res.token})});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok||!j||!j.text){if(r.status===429)aiLeft=0;throw new Error('ai')}
+    aiLeft=j.left;h.value=j.text;st.textContent='';return true;
+  }catch(e){st.textContent='';return false}
+  finally{aiBusy=false;h.classList.remove('loading')}
+}
+async function remakeHint(){
+  if(await aiDraft())return;
+  hintVar++;document.getElementById('hint').value=makeHint(hintVar);
+}
 async function copyHint(b){const t=document.getElementById('hint').value;
   try{await navigator.clipboard.writeText(t);b.textContent='コピーしました'}catch(e){const h=document.getElementById('hint');h.select();b.textContent='選択しました。長押しでコピー'}
   setTimeout(()=>b.textContent='文章をコピー',2000)}
