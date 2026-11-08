@@ -261,7 +261,7 @@ function renderHq(){
   if(!list.length){box.innerHTML='<p class="small" style="text-align:center;padding:20px">該当する回答はありません</p>';}
   else box.innerHTML=list.map(r=>{
     const alert=r.stars<=3;
-    const dl=QUESTIONS.map(q=>`<dt>${q.q.replace(/[？?]$/,'').slice(0,12)}</dt><dd>${esc((r.answers||{})[q.id]||'-')}</dd>`).join('');
+    const dl=QUESTIONS.filter(q=>(r.answers||{})[q.id]).map(q=>`<dt>${q.q.replace(/[？?]$/,'').slice(0,12)}</dt><dd>${esc(r.answers[q.id])}</dd>`).join('');
     return `<div class="rec ${alert?'alert':''}">
       <div class="head"><div><span class="st">${'★'.repeat(r.stars)}<span style="color:#5a4a3e">${'★'.repeat(5-r.stars)}</span></span>
       <div class="meta">${fmt(r.time)} ／ ${esc(storeName(r.store))} ／ ガチャ：${esc(r.prize)}${r.lose?'':(r.redeemed?'（引換済）':'（未引換）')}</div></div>${r.test?'<span class="tbadge">テスト</span>':(alert?'<span class="flag">要確認</span>':'')}</div>

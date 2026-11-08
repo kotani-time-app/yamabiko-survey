@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "no key" }, 500);
 
   const answers = input.answers || {};
-  const lines = Object.keys(LABELS).filter((k) => answers[k]).map((k) => `- ${LABELS[k]}：${answers[k]}`).join("\n");
+  const lines = Object.keys(LABELS).filter((k) => answers[k] && !(k === "best" && answers[k] === "その他")).map((k) => `- ${LABELS[k]}：${answers[k]}`).join("\n");
   const pool = STYLES.filter((x) => x.name !== body.exclude);
   const style = pool[Math.floor(Math.random() * pool.length)];
   const prompt = `焼肉店に来店したお客様が、Googleクチコミを書くときの「たたき台」を作ってください。お客様はこの文章を読み、自由に書き直してから自分で投稿します。

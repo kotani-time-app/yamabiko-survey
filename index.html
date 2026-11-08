@@ -164,7 +164,7 @@ textarea.loading{opacity:.5}
       <div class="hero">
         <div class="shop" id="shopName">やまびこ畜産 京橋店</div>
         <h1>アンケートに答えて<br><em>ガチャ</em>に挑戦！</h1>
-        <p class="lead">7問・約30秒で終わります。<br>シャーベットやアイスクリームが当たるかも（ハズレもあります）<br><span style="font-size:12px">※ガチャはお一人様1日1回まで</span></p>
+        <p class="lead"><span id="qCount">7</span>問・約30秒で終わります。<br>シャーベットやアイスクリームが当たるかも（ハズレもあります）<br><span style="font-size:12px">※ガチャはお一人様1日1回まで</span></p>
       </div>
       <div class="machine" style="width:200px">
         <svg viewBox="0 0 260 300" aria-hidden="true">
@@ -287,6 +287,11 @@ const STORES={
 };
 const STORE_ID=(()=>{const q=new URLSearchParams(location.search).get('s');return STORES[q]?q:'kyobashi'})();
 const STORE=STORES[STORE_ID];
+if(STORE_ID==='fuse'){
+  const i=QUESTIONS.findIndex(q=>q.id==='explain');if(i>=0)QUESTIONS.splice(i,1);
+  const b=QUESTIONS.find(q=>q.id==='best');if(b)b.opts=['タン','ハラミ','ロース','カルビ','ごはん','二郎系焼肉','背脂そば','サイドメニュー','その他'];
+}
+document.getElementById('qCount').textContent=QUESTIONS.length+1;
 document.title=STORE.name+' アンケート';
 document.getElementById('shopName').textContent=STORE.name;
 document.getElementById('gLink').href=STORE.place?('https://search.google.com/local/writereview?placeid='+STORE.place):(STORE.map||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(STORE.full)));
@@ -439,7 +444,7 @@ function makeHint(v){
   const a=state.answers,pick=(k)=>(PHRASES[k][a[k]]||['',''])[v%2];
   const parts=[];
   parts.push(pick('meat'));
-  if(a.best) parts.push(['ごはん','サイドメニュー'].includes(a.best)?(v%2?`${a.best}も良かったです。`:`${a.best}もおいしかったです。`):(v%2?`${a.best}が特に良かったです。`:`特に${a.best}がおいしかったです。`));
+  if(a.best&&a.best!=='その他') parts.push(['ごはん','サイドメニュー'].includes(a.best)?(v%2?`${a.best}も良かったです。`:`${a.best}もおいしかったです。`):(v%2?`${a.best}が特に良かったです。`:`特に${a.best}がおいしかったです。`));
   parts.push(pick('service'));parts.push(pick('explain'));parts.push(pick('speed'));parts.push(pick('clean'));
   if(state.stars>=4)parts.push(v%2?'ぜひまた行きたいです。':'また来たいと思います。');
   return parts.filter(Boolean).join('');
