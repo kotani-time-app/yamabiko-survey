@@ -106,6 +106,7 @@ textarea.loading{opacity:.5}
 .hq{border-color:#7a4a30;background:linear-gradient(180deg,#3a271c,var(--panel))}
 .sent{color:var(--green);font-size:14px;font-weight:700;margin-top:10px;text-align:center}
 .google{border-color:var(--line)}
+.lbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;margin-top:12px;background:#06C755;color:#fff;font-weight:900;font-size:15px;text-decoration:none}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;margin-top:12px;background:#fff;color:#202124;font-weight:900;font-size:15px;text-decoration:none}
 .copyrow{display:flex;gap:8px;margin-top:8px}
 .copyrow button{flex:1;padding:10px;border-radius:10px;background:var(--panel2);color:var(--ink);font-size:13px;font-weight:700}
@@ -223,6 +224,7 @@ textarea.loading{opacity:.5}
 
     <section class="screen" id="s-result">
       <div class="card result" id="resultBox"></div>
+      <div id="lineSlot"></div>
 
       <div class="card hq" id="hqBox" style="display:none">
         <span class="tag">本社に直接届きます</span>
@@ -280,7 +282,7 @@ function deviceId(){
   return id;
 }
 const STORES={
-  kyobashi:{name:'やまびこ畜産 京橋店',place:'ChIJGyddMczhAGARJlugzY6oG1s',full:'焼肉ホルモン やまびこ畜産 京橋店'},
+  kyobashi:{name:'やまびこ畜産 京橋店',place:'ChIJGyddMczhAGARJlugzY6oG1s',line:'https://u.lin.ee/zrGodpX',full:'焼肉ホルモン やまびこ畜産 京橋店'},
   fuse:{name:'やまびこ畜産 布施駅前店',place:'ChIJ9_tH2EzfAGARsIQXE1Kdu8s',map:'https://maps.app.goo.gl/5QseAxN9YGQBENjH8',full:'焼肉ホルモン やまびこ畜産 布施駅前店'}
 };
 const STORE_ID=(()=>{const q=new URLSearchParams(location.search).get('s');return STORES[q]?q:'kyobashi'})();
@@ -289,6 +291,8 @@ document.title=STORE.name+' アンケート';
 document.getElementById('shopName').textContent=STORE.name;
 document.getElementById('gLink').href=STORE.place?('https://search.google.com/local/writereview?placeid='+STORE.place):(STORE.map||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(STORE.full)));
 const G_URL=document.getElementById('gLink').href;
+function lineCard(){return STORE.line?`<div class="card"><div class="section-title">LINEショップカード</div><p class="small">ご来店ごとにポイントが貯まります。お会計の際にスタッフへお声がけください。</p><a class="lbtn" href="${STORE.line}" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6 1.1-.5 6-3.5 8.2-6C21.4 14.2 22 12.7 22 11c0-4.4-4.5-8-10-8z"/></svg>LINEショップカードを受け取る</a></div>`:''}
+document.getElementById('lineSlot').innerHTML=lineCard();
 if(!STORE.place){document.getElementById('gNote').textContent='※文章は自動でコピーされます。Googleマップの店舗ページの「クチコミ」から投稿できます'}
 const DEVICE=deviceId();
 let TEST_KEY=null;try{TEST_KEY=localStorage.getItem('ymb_test_key')}catch(e){}
@@ -311,6 +315,7 @@ function renderTop(){
   box.innerHTML=`<div class="big">🎰</div><div class="section-title" style="margin-top:8px">本日のガチャは参加済みです</div>
     <p class="small">ご協力ありがとうございました。次回は ${nextReset()} 以降に参加できます。</p>`+
     (p.lose?'':ticketHtml(p,'本日の当たり：'+esc(p.prize)+'　スタッフにお見せください'));
+  if(STORE.line)box.innerHTML+=`<a class="lbtn" style="margin-top:16px" href="${STORE.line}" target="_blank" rel="noopener">LINEショップカードを受け取る</a>`;
   const d=loadDraft();
   if(d){box.innerHTML+=`<div style="text-align:left;margin-top:16px"><div class="section-title">クチコミの文章（下書き）</div>
     <textarea id="hint2" oninput="saveDraft(this.value)">${esc(d)}</textarea>
